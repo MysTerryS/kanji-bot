@@ -3,5 +3,4 @@ __pychache__/
 kanji_base.db
 kanji_list.txt
 RequestSQL.txt
-client.py
 *.pyc
