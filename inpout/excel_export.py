@@ -1,45 +1,44 @@
-from openpyxl import load_workbook, Workbook
+from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
-from utils import SendToBase, SaveValue, ShowKanjiWithPronouncesAndMeaning, SendRadicalToBase
-from os import remove, getcwd
+from constants import path_to_export
 from models import Kanji
+from services.info import (
+    ShowKanjiWithPronouncesAndMeaning,
+    SafeJoin
+)
 
-path_to_export = getcwd() + "KanjiList.xls"
-
-def load_excel(file):
-    wb = load_workbook(file)
-    ws = wb.active
-    return wb, ws
-
-# Import
-
-def read_kanji(ws, row):
-    kanjiDict = dict()
-    column = 1
-    while column <= 8:
-        key = ws.cell(row = 1, column = column).value.lower()
-        value = ws.cell(row = row, column = column).value
-        kanjiDict[key] = SaveValue(key, value)
-        column += 1
-    return kanjiDict
-
-def read_excel(file, isRadical):
-    wb, ws = load_excel(file)
+def put_kanji_in_excel(kanjiList):
+    wb = Workbook()
+    sheet = wb.active
+    sheet.title = "KanjiList"
+    sheet = fill_head_columns(sheet)
     row = 2
-    try:
-        while ws.cell(row = row, column = 1).value != None:
-            kanjiDict = read_kanji(ws, row)
-            SendToBase(kanjiDict)
-            if isRadical:
-                SendRadicalToBase(kanjiDict["kanji"])
-            row += 1
-        wb.close()
-        remove(file)
-        return "Successful"
-    except Exception as ex:
-        return ex
-    
+    for kanji in kanjiList:
+        kanjiObject = Kanji()
+        kanjiObject.hieroglyph = kanji[0]
+        kanjiDict = ShowKanjiWithPronouncesAndMeaning(kanjiObject)
+        sheet = fill_columns(sheet, row, kanjiDict)
+        row += 1
+    FileFormat(sheet)
+    wb.save(path_to_export)
+    return path_to_export
+
+def make_all_of_radical_table(radicalKanjiDict):
+    wb = Workbook()
+    sheet = wb.active
+    sheet.title = "RadicalKanjiList"
+    sheet.cell(row = 1, column = 1).value = "Radical"
+    sheet.cell(row = 1, column = 2).value = "Kanjies"
+    row = 2
+    for radical, kanji in radicalKanjiDict.items():
+        sheet.cell(row = row, column = 1).value = radical
+        sheet.cell(row = row, column = 2).value = kanji
+        row += 1
+    FileFormat(sheet)
+    wb.save(path_to_export)
+    return path_to_export
+
 def fill_head_columns(ws):
     ws.cell(row = 1, column = 1).value = "Kanji"
     ws.cell(row = 1, column = 2).value = "Onyomi"
@@ -49,11 +48,6 @@ def fill_head_columns(ws):
     ws.cell(row = 1, column = 6).value = "Eng"
     ws.cell(row = 1, column = 7).value = "Rus"
     return ws
-
-def SafeJoin(element):
-    if not element:
-        return ""
-    return ", ".join(str(x) for x in element if x is not ModuleNotFoundError and x is not None)
 
 def fill_columns(ws, row, kanjiDict):
     ws.cell(row = row, column = 1).value = kanjiDict["kanji"]
@@ -92,20 +86,3 @@ def FileFormat(ws):
                 vertical = "center",
                 wrap_text = True
             )
-
-# Export
-def put_kanji_in_excel(kanjiList):
-    wb = Workbook()
-    sheet = wb.active
-    sheet.title = "KanjiList"
-    sheet = fill_head_columns(sheet)
-    row = 2
-    for kanji in kanjiList:
-        kanjiObject = Kanji()
-        kanjiObject.hieroglyph = kanji[0]
-        kanjiDict = ShowKanjiWithPronouncesAndMeaning(kanjiObject)
-        sheet = fill_columns(sheet, row, kanjiDict)
-        row += 1
-    FileFormat(sheet)
-    wb.save(path_to_export)
-    return path_to_export

@@ -1,8 +1,8 @@
 from os import remove, getcwd
-from utils import parse_kanji_text, SendToBase, SendRadicalToBase
+from services.parser import parse_kanji_text
+from services.import_service import SendToBase, SendRadicalToBase
+from services.info import ShowKanjiWithPronouncesAndMeaning, SafeJoin
 from models import Kanji
-from utils import ShowKanjiWithPronouncesAndMeaning
-from excel import SafeJoin
 
 path_to_txt = getcwd() + "kanjiList.txt"
 
@@ -23,7 +23,7 @@ def read_txt(path_to_file, isRadical):
         return "Successful"
     except Exception as ex:
         return ex
-    
+
 def one_kanji(file, kanjiDict):
     file.write("Kanji: " + kanjiDict["kanji"] + "\n")
     file.write("Onyomi: " + SafeJoin(kanjiDict["onyomi"]) + "\n")

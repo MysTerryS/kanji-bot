@@ -19,6 +19,7 @@
 # Radicals table
 # link with radicals
 # kanji on radicals
+# Create all of radicals from kanji
 
 import sqlite3
 from database import *
@@ -50,3 +51,5 @@ def AddKunyomi(kanji_id: int, kanji: Kanji):
 
 def ShowKanji(kanji):
     return select_kanji(kanji)
+
+# For Telegram
